@@ -2,12 +2,13 @@ package storage
 
 import (
 	"context"
-	"log"
-	"goauth/internal/entity"
+	"errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"errors"
+	"goauth/internal/entity"
+	"goauth/internal/config"
+	"log"
 	"time"
 )
 
@@ -15,8 +16,8 @@ type UserStorage struct {
 	db *mongo.Collection
 }
 
-func ConnectDB() *mongo.Database {
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+func ConnectDB(cfg config.MongoConfig) *mongo.Database {
+	client, err := mongo.NewClient(options.Client().ApplyURI(cfg.Url))
 	if err != nil {
 		log.Fatalf("Error occured while establishing connection to mongoDB")
 	}
@@ -34,12 +35,12 @@ func ConnectDB() *mongo.Database {
 		log.Fatal(err)
 	}
 
-	return client.Database("authorizer")
+	return client.Database(cfg.Name)
 }
 
-func NewUserStorage(db *mongo.Database, collection string) *UserStorage {
+func NewUserStorage(db *mongo.Database, cfg config.MongoConfig) *UserStorage {
 	return &UserStorage{
-		db: db.Collection(collection),
+		db: db.Collection(cfg.Collection),
 	}
 }
 

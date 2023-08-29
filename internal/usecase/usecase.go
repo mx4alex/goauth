@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"goauth/internal/entity"
+	"goauth/internal/config"
 	"crypto/sha1"
 	"github.com/dgrijalva/jwt-go/v4"
 	"time"
@@ -22,12 +23,12 @@ type AuthInteractor struct {
 	signingKey     []byte
 }
 
-func NewAuthInteractor(userStorage UserStorage) *AuthInteractor {
+func NewAuthInteractor(userStorage UserStorage, cfg config.AuthConfig) *AuthInteractor {
 	return &AuthInteractor{
 		userStorage: 	userStorage,
-		hashSalt:    	"<PASSWORD>",
-        expireDuration: time.Hour * 24,
-        signingKey: 	[]byte("secret"),
+		hashSalt:    	cfg.HashSalt,
+        expireDuration: time.Duration(cfg.TokenTTL) * time.Second,
+        signingKey: 	[]byte(cfg.SigningKey),
 	}
 }
 

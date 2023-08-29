@@ -1,0 +1,11 @@
+host_addr: "localhost:8080"
+
+auth:
+  signing_key: "secret_signing_key"
+  hash_salt: "secret_hash_salt"
+  token_ttl: 900
+
+mongo:
+  url: "mongodb://localhost:27017"
+  name: "authorizer"
+  collection: "users"
