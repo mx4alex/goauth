@@ -1,14 +1,16 @@
 package main
 
 import (
-	"goauth/internal/server"
-	"goauth/internal/usecase"
-	"goauth/internal/storage"
+	"context"
 	"goauth/internal/config"
+	"goauth/internal/server"
+	"goauth/internal/storage"
+	"goauth/internal/usecase"
+	"goauth/pkg/manager"
+	"goauth/pkg/hash"
+	"log"
 	"os"
 	"os/signal"
-	"context"
-	"log"
 )
 
 func main() {
@@ -16,10 +18,13 @@ func main() {
 	if err!= nil {
         log.Fatal(err)
     }
+	authConfig := appConfig.Auth
+	tokenManager := manager.NewManager(authConfig.SigningKey, authConfig.AccessTokenTTL, authConfig.RefreshTokenTTL)
+	passwordHasher := hash.NewSHA1Hasher(authConfig.HashSalt)
 
 	db :=  storage.ConnectDB(appConfig.MongoDB)
 	appStorage := storage.NewUserStorage(db, appConfig.MongoDB)
-	appInteractor := usecase.NewAuthInteractor(appStorage, appConfig.Auth)
+	appInteractor := usecase.NewAuthInteractor(appStorage, tokenManager, passwordHasher)
 	handlers := server.NewHandler(appInteractor)
 
 	srv := new(server.Server)

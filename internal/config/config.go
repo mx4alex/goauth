@@ -2,6 +2,7 @@ package config
 
 import (
 	"github.com/spf13/viper"
+	"time"
 )
 
 const (
@@ -16,9 +17,10 @@ type Config struct {
 }
 
 type AuthConfig struct {
-	SigningKey string  `mapstructure:"signing_key"`
-	HashSalt   string  `mapstructure:"hash_salt"`
-	TokenTTL   int     `mapstructure:"token_ttl"`
+	SigningKey 		string    	   `mapstructure:"signing_key"`
+	HashSalt  		string  	   `mapstructure:"hash_salt"`
+	AccessTokenTTL  time.Duration  `mapstructure:"access_token_ttl"`
+	RefreshTokenTTL time.Duration  `mapstructure:"refresh_token_ttl"`
 }
 
 type MongoConfig struct {

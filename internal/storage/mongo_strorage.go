@@ -44,8 +44,15 @@ func NewUserStorage(db *mongo.Database, cfg config.MongoConfig) *UserStorage {
 	}
 }
 
-func (r *UserStorage) CreateUser(ctx context.Context, user *entity.User) error {
-	_, err := r.db.InsertOne(ctx, user)
+func (r *UserStorage) CreateUser(ctx context.Context, user *entity.UserInput, refreshToken *entity.RefreshToken) error {
+	newUser := bson.M{
+		"username":      user.Username,
+        "password":      user.Password,
+        "refresh_token": refreshToken.Token,
+		"expires_at":    refreshToken.ExpiresAt,
+	}
+
+	_, err := r.db.InsertOne(ctx, newUser)
 	if err != nil {
 		return errors.New("user already exists")
 	}
@@ -53,16 +60,59 @@ func (r *UserStorage) CreateUser(ctx context.Context, user *entity.User) error {
 	return nil
 }
 
-func (r *UserStorage) GetUser(ctx context.Context, username, password string) (*entity.User, error) {
-	user := new(entity.User)
+func (r *UserStorage) GetUser(ctx context.Context, username, password string) (string, error) {
+	user := new(entity.UserDB)
 
-	if err := r.db.FindOne(ctx, bson.M{"_id": username, "password": password}).Decode(user); err != nil {
+	err := r.db.FindOne(ctx, bson.M{"username": username, "password": password}).Decode(user)
+	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, errors.New("user not found")
+			return "", errors.New("user not found")
 		}
 
-		return nil, err
+		return "", err
 	}
 
-	return user, nil
+	return user.Username, nil
+}
+
+func (r *UserStorage) UpdateUser(ctx context.Context, username string, newToken *entity.RefreshToken) error {
+	filter := bson.M{"username": username}
+	update := bson.M{"$set": bson.M{"refresh_token": newToken.Token, "expires_at": newToken.ExpiresAt}}
+
+	_, err := r.db.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *UserStorage) Refresh(ctx context.Context, oldToken string, newToken *entity.RefreshToken) error {
+	filter := bson.M{"refresh_token": oldToken}
+	update := bson.M{"$set": bson.M{
+		"refresh_token": newToken.Token,
+		"expires_at": newToken.ExpiresAt,
+	}}
+
+	_, err := r.db.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *UserStorage) GetUsername(ctx context.Context, refreshToken string) (string, time.Time, error) {
+	user := new(entity.UserDB)
+
+	err := r.db.FindOne(ctx, bson.M{"refresh_token": refreshToken}).Decode(user)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return "", time.Time{}, errors.New("user not found")
+		}
+
+		return "", time.Time{}, err
+	}
+
+	return user.Username, user.ExpiresAt, nil
 }

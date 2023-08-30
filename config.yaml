@@ -3,7 +3,8 @@ host_addr: "localhost:8080"
 auth:
   signing_key: "secret_signing_key"
   hash_salt: "secret_hash_salt"
-  token_ttl: 900
+  access_token_ttl: 15m
+  refresh_token_ttl: 720h
 
 mongo:
   url: "mongodb://localhost:27017"
