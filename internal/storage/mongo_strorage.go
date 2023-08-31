@@ -44,8 +44,9 @@ func NewUserStorage(db *mongo.Database, cfg config.MongoConfig) *UserStorage {
 	}
 }
 
-func (r *UserStorage) CreateUser(ctx context.Context, user *entity.UserInput, refreshToken *entity.RefreshToken) error {
+func (r *UserStorage) CreateUser(ctx context.Context, user *entity.UserSignUp, refreshToken *entity.RefreshToken) error {
 	newUser := bson.M{
+		"name":          user.Name,
 		"username":      user.Username,
         "password":      user.Password,
         "refresh_token": refreshToken.Token,

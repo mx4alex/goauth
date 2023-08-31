@@ -10,7 +10,7 @@ import (
 )
 
 type UserStorage interface {
-	CreateUser(context.Context, *entity.UserInput, *entity.RefreshToken) error
+	CreateUser(context.Context, *entity.UserSignUp, *entity.RefreshToken) error
 	GetUser(context.Context, string, string) (string, error)
 	UpdateUser(context.Context, string, *entity.RefreshToken) error
 	Refresh(context.Context, string, *entity.RefreshToken) error
@@ -31,7 +31,7 @@ func NewAuthInteractor(userStorage UserStorage, tokenManager manager.TokenManage
 	}
 }
 
-func (t *AuthInteractor) SignUp(ctx context.Context, user *entity.UserInput) (string, string, error) {
+func (t *AuthInteractor) SignUp(ctx context.Context, user *entity.UserSignUp) (string, string, error) {
 	user.Password = t.passwordHasher.Hash(user.Password)
 	
 	refreshToken, err := t.tokenManager.NewRefreshToken()
@@ -48,7 +48,7 @@ func (t *AuthInteractor) SignUp(ctx context.Context, user *entity.UserInput) (st
 	return accessToken, refreshToken.Token, t.userStorage.CreateUser(ctx, user, refreshToken)
 }
 
-func (t *AuthInteractor) SignIn(ctx context.Context, user *entity.UserInput) (string, string, error) {
+func (t *AuthInteractor) SignIn(ctx context.Context, user *entity.UserSignIn) (string, string, error) {
 	user.Password = t.passwordHasher.Hash(user.Password)
 
 	username, err := t.userStorage.GetUser(ctx, user.Username, user.Password)

@@ -33,7 +33,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 }
 
 func (h *Handler) SignUp(c *gin.Context) {
-	user := new(entity.UserInput)
+	user := new(entity.UserSignUp)
 	if err := c.BindJSON(user); err != nil {
 		log.Println(err)
         c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -51,7 +51,7 @@ func (h *Handler) SignUp(c *gin.Context) {
 }
 
 func (h *Handler) SignIn(c *gin.Context) {
-	user := new(entity.UserInput)
+	user := new(entity.UserSignIn)
 	if err := c.BindJSON(user); err != nil {
         c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         return
