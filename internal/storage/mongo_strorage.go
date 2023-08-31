@@ -116,3 +116,13 @@ func (r *UserStorage) GetUsername(ctx context.Context, refreshToken string) (str
 
 	return user.Username, user.ExpiresAt, nil
 }
+
+func (r *UserStorage) RemoveExpiredTokens(ctx context.Context) error{
+	currTime := time.Now()
+	_, err := r.db.DeleteMany(ctx, bson.M{"expires_at": bson.M{"$lt": currTime}})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

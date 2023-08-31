@@ -57,7 +57,7 @@ func (m *Manager) Parse(accessToken string) (string, error) {
 		return "", fmt.Errorf("error get user claims from token")
 	}
 
-	return claims["sub"].(string), nil
+	return claims["username"].(string), nil
 }
 
 func (m *Manager) NewRefreshToken() (*entity.RefreshToken, error) {
