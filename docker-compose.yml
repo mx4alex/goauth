@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  auth-server:
+    build: ./
+    container_name: "auth-server"
+    command: ./goauth
+    ports:
+      - 8080:8080
+    depends_on:
+      - mongodb
+    restart: on-failure:5
+
+  mongodb:
+    image: mongo:latest
+    container_name: "mongodb"
+    volumes:
+      - ./mongo:/data/db
+    environment:
+      - MONGO_DATA_DIR=/data/db
+      - MONGO_LOG_DIR=/dev/null
+    ports:
+      - 27017:27017
+    restart: always
+    command: mongod --logpath=/dev/null

@@ -1,4 +1,4 @@
-host_addr: "localhost:8080"
+host_addr: ":8080"
 
 auth:
   signing_key: "secret_signing_key"
@@ -7,6 +7,6 @@ auth:
   refresh_token_ttl: 720h
 
 mongo:
-  url: "mongodb://localhost:27017"
+  url: "mongodb://mongodb:27017"
   name: "authorizer"
   collection: "users"

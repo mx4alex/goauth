@@ -51,6 +51,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 // @Router /auth/sign-up [post]
 func (h *Handler) SignUp(c *gin.Context) {
 	user := new(entity.UserSignUp)
+
 	if err := c.BindJSON(user); err != nil {
 		log.Println(err)
         c.JSON(http.StatusBadRequest, errorResponse(err.Error()))
