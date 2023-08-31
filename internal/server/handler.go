@@ -38,15 +38,6 @@ func (h *Handler) InitRoutes() *gin.Engine {
 	return router
 }
 
-type errorResponse struct {
-	Message string `json:"message"`
-}
-
-type tokens struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-}
-
 // @Summary 	SignUp
 // @Tags 		auth
 // @Description create account
@@ -54,26 +45,26 @@ type tokens struct {
 // @Accept  	json
 // @Produce  	json
 // @Param 		input body entity.UserSignUp true "account info"
-// @Success 	200 {object} tokens
-// @Failure 	400,404 {object} errorResponse
-// @Failure 	default {object} errorResponse
+// @Success 	200 {object} outputTokens
+// @Failure 	400,404 {object} errorMessage
+// @Failure 	default {object} errorMessage
 // @Router /auth/sign-up [post]
 func (h *Handler) SignUp(c *gin.Context) {
 	user := new(entity.UserSignUp)
 	if err := c.BindJSON(user); err != nil {
 		log.Println(err)
-        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        c.JSON(http.StatusBadRequest, errorResponse(err.Error()))
         return
     }
 
-	accessToken, refreshToken, err := h.authInteractor.SignUp(c.Request.Context(), user)
+	tokens, err := h.authInteractor.SignUp(c.Request.Context(), user)
 	if err != nil {
 		log.Println(err)
-        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        c.JSON(http.StatusBadRequest, errorResponse(err.Error()))
         return
     }
 
-	c.JSON(http.StatusOK, gin.H{"access_token": accessToken, "refresh_token": refreshToken})
+	c.JSON(http.StatusOK, successResponse(tokens))
 }
 
 // @Summary 	SignIn
@@ -83,28 +74,24 @@ func (h *Handler) SignUp(c *gin.Context) {
 // @Accept  	json
 // @Produce  	json
 // @Param 		input body entity.UserSignIn true "credentials"
-// @Success 	200 {object} tokens
-// @Failure 	400,404 {object} errorResponse
-// @Failure 	default {object} errorResponse
+// @Success 	200 {object} outputTokens
+// @Failure 	400,404 {object} errorMessage
+// @Failure 	default {object} errorMessage
 // @Router /auth/sign-in [post]
 func (h *Handler) SignIn(c *gin.Context) {
 	user := new(entity.UserSignIn)
 	if err := c.BindJSON(user); err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        c.JSON(http.StatusBadRequest, errorResponse(err.Error()))
         return
     }
 
-	accessToken, refreshToken, err := h.authInteractor.SignIn(c.Request.Context(), user)
+	tokens, err := h.authInteractor.SignIn(c.Request.Context(), user)
 	if err!= nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        c.JSON(http.StatusBadRequest, errorResponse(err.Error()))
         return
     }
 
-	c.JSON(http.StatusOK, gin.H{"access_token": accessToken, "refresh_token": refreshToken})
-}
-
-type refreshRequest struct {
-	RefreshToken string `json:"refresh_token"`
+	c.JSON(http.StatusOK, successResponse(tokens))
 }
 
 // @Summary 	RefreshToken
@@ -114,22 +101,22 @@ type refreshRequest struct {
 // @Accept  	json
 // @Produce  	json
 // @Param 		input body refreshRequest true "refresh token"
-// @Success 	200 {object} tokens
-// @Failure 	400,404 {object} errorResponse
-// @Failure 	default {object} errorResponse
+// @Success 	200 {object} outputTokens
+// @Failure 	400,404 {object} errorMessage
+// @Failure 	default {object} errorMessage
 // @Router /auth/refresh [post]
 func (h *Handler) Refresh(c *gin.Context) {
 	var requestBody refreshRequest
 	if err := c.BindJSON(&requestBody); err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        c.JSON(http.StatusBadRequest, errorResponse(err.Error()))
         return
     }
 
-	accessToken, refreshToken, err := h.authInteractor.RefreshToken(c.Request.Context(), requestBody.RefreshToken)
+	tokens, err := h.authInteractor.RefreshToken(c.Request.Context(), requestBody.RefreshToken)
 	if err!= nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        c.JSON(http.StatusBadRequest, errorResponse(err.Error()))
         return
     }
 
-	c.JSON(http.StatusOK, gin.H{"access_token": accessToken, "refresh_token": refreshToken})
+	c.JSON(http.StatusOK, successResponse(tokens))
 }

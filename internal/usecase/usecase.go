@@ -31,66 +31,86 @@ func NewAuthInteractor(userStorage UserStorage, tokenManager manager.TokenManage
 	}
 }
 
-func (t *AuthInteractor) SignUp(ctx context.Context, user *entity.UserSignUp) (string, string, error) {
+func (t *AuthInteractor) SignUp(ctx context.Context, user *entity.UserSignUp) (*entity.Tokens, error) {
 	user.Password = t.passwordHasher.Hash(user.Password)
 	
 	refreshToken, err := t.tokenManager.NewRefreshToken()
 	if err != nil {
 		log.Println(err)
-        return "", "", err
+        return nil, err
     }
 
 	accessToken, err := t.tokenManager.NewJWT(user.Username)
 	if err != nil {
-        return "", "", err
+        return nil, err
     }
 
-	return accessToken, refreshToken.Token, t.userStorage.CreateUser(ctx, user, refreshToken)
+	tokens := &entity.Tokens{
+		AccessToken: accessToken,
+		RefreshToken: refreshToken.Token,
+	}
+
+	err = t.userStorage.CreateUser(ctx, user, refreshToken)
+	if err != nil {
+        return nil, err
+    }
+
+	return tokens, nil
 }
 
-func (t *AuthInteractor) SignIn(ctx context.Context, user *entity.UserSignIn) (string, string, error) {
+func (t *AuthInteractor) SignIn(ctx context.Context, user *entity.UserSignIn) (*entity.Tokens, error) {
 	user.Password = t.passwordHasher.Hash(user.Password)
 
 	username, err := t.userStorage.GetUser(ctx, user.Username, user.Password)
 	if err != nil {
-		return "", "", err
+		return nil, err
 	}
 
 	refreshToken, err := t.tokenManager.NewRefreshToken()
 	if err != nil {
-        return "", "", err
+        return nil, err
     }
 
 	err = t.userStorage.UpdateUser(ctx, username, refreshToken)
 
 	accessToken, err := t.tokenManager.NewJWT(user.Username)
 	if err != nil {
-        return "", "", err
+        return nil, err
     }
 
-	return accessToken, refreshToken.Token, nil
+	tokens := &entity.Tokens{
+		AccessToken: accessToken,
+		RefreshToken: refreshToken.Token,
+	}
+
+	return tokens, nil
 }
 
-func (t *AuthInteractor) RefreshToken(ctx context.Context, oldToken string) (string, string, error) {
+func (t *AuthInteractor) RefreshToken(ctx context.Context, oldToken string) (*entity.Tokens, error) {
 	newRefreshToken, err := t.tokenManager.NewRefreshToken()
-	if err!= nil {
-        return "", "", err
+	if err != nil {
+        return nil, err
     }
 
 	username, _, err := t.userStorage.GetUsername(ctx, oldToken)
 	if err != nil {
-		return "", "", err
+		return nil, err
 	}
 
 	err = t.userStorage.Refresh(ctx, oldToken, newRefreshToken)
 	if err != nil {
-		return "", "", err
+		return nil, err
 	}
 
 	accessToken, err := t.tokenManager.NewJWT(username)
 	if err != nil {
-        return "", "", err
+        return nil, err
     }
 
-	return accessToken, newRefreshToken.Token, nil
+	tokens := &entity.Tokens{
+		AccessToken: accessToken,
+		RefreshToken: newRefreshToken.Token,
+	}
+
+	return tokens, nil
 }
