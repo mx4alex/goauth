@@ -6,7 +6,7 @@
   ```
   git clone https://github.com/mx4alex/goauth.git
   ```
-- Настроить конфигурацию в файле `config.yaml`
+- Настроить конфигурацию в файле `config.yaml` и окружение в файле `.env` 
 - Запустить *docker compose*
   ```
   docker compose up --build
