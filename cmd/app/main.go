@@ -8,6 +8,7 @@ import (
 	"goauth/internal/usecase"
 	"goauth/pkg/manager"
 	"goauth/pkg/hash"
+	"github.com/joho/godotenv"
 	"log"
 	"os"
 	"os/signal"
@@ -22,12 +23,18 @@ import (
 
 func main() {
 	appConfig, err := config.New()
-	if err!= nil {
-        log.Fatal(err)
+	if err != nil {
+        log.Fatal("Error loading config file")
     }
+
+	err = godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
 	authConfig := appConfig.Auth
-	tokenManager := manager.NewManager(authConfig.SigningKey, authConfig.AccessTokenTTL, authConfig.RefreshTokenTTL)
-	passwordHasher := hash.NewSHA1Hasher(authConfig.HashSalt)
+	tokenManager := manager.NewManager(os.Getenv("SIGNING_KEY"), authConfig.AccessTokenTTL, authConfig.RefreshTokenTTL)
+	passwordHasher := hash.NewSHA1Hasher(os.Getenv("HASH_SALT"))
 
 	db :=  storage.ConnectDB(appConfig.MongoDB)
 	appStorage := storage.NewUserStorage(db, appConfig.MongoDB)

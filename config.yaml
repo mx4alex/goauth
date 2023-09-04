@@ -1,8 +1,6 @@
 host_addr: ":8080"
 
 auth:
-  signing_key: "secret_signing_key"
-  hash_salt: "secret_hash_salt"
   access_token_ttl: 15m
   refresh_token_ttl: 720h
 
