@@ -5,6 +5,7 @@ import (
 	"goauth/internal/entity"
 	"goauth/pkg/manager"
 	"goauth/pkg/hash"
+	"errors"
 	"log"
 	"time"
 )
@@ -33,6 +34,11 @@ func NewAuthInteractor(userStorage UserStorage, tokenManager manager.TokenManage
 
 func (t *AuthInteractor) SignUp(ctx context.Context, user *entity.UserSignUp) (*entity.Tokens, error) {
 	user.Password = t.passwordHasher.Hash(user.Password)
+
+	_, err := t.userStorage.GetUser(ctx, user.Username, user.Password)
+	if err == nil {
+		return nil, errors.New("user already exists")
+	}
 	
 	refreshToken, err := t.tokenManager.NewRefreshToken()
 	if err != nil {
